@@ -29,9 +29,22 @@ import {
   type Rating,
   type Review,
 } from './model/schemas';
-import { newSchedule, nextSchedule, previewDue } from './scheduler/fsrs';
-import { buildStudyQueue, type StudyQueue } from './scheduler/queue';
-import { computeStats, type DeckStats } from './stats';
+import { newSchedule, nextSchedule } from './scheduler/fsrs';
+import type { StudyQueue } from './scheduler/queue';
+import {
+  selectAnswerPreview,
+  selectCardFaces,
+  selectCardsOfDeck,
+  selectCardsOfNote,
+  selectDeck,
+  selectDecks,
+  selectNotesOfDeck,
+  selectReviewsOfDeck,
+  selectStats,
+  selectStudyQueue,
+  type CardFaces,
+} from './selectors';
+import type { DeckStats } from './stats';
 import { RecordCodec } from './storage/codec';
 import type { RecordStore } from './storage/types';
 import { validate } from './validate';
@@ -69,11 +82,6 @@ export interface NewNoteInput {
   front: string;
   back: string;
   tags?: string[];
-}
-
-export interface CardFaces {
-  question: string;
-  answer: string;
 }
 
 const MAX_UNDO = 20;
@@ -127,55 +135,44 @@ export class Collection {
   };
 
   listDecks(): Deck[] {
-    return [...this.state.decks.values()].sort((a, b) => a.name.localeCompare(b.name) || a.createdAt - b.createdAt);
+    return selectDecks(this.state);
   }
 
   getDeck(id: string): Deck {
-    return mustGet(this.state.decks, id, 'deck');
+    return selectDeck(this.state, id);
   }
 
   notesOfDeck(deckId: string): Note[] {
-    return [...this.state.notes.values()].filter((n) => n.deckId === deckId).sort((a, b) => b.createdAt - a.createdAt);
+    return selectNotesOfDeck(this.state, deckId);
   }
 
   cardsOfDeck(deckId: string): Card[] {
-    return [...this.state.cards.values()].filter((c) => c.deckId === deckId);
+    return selectCardsOfDeck(this.state, deckId);
   }
 
   cardsOfNote(noteId: string): Card[] {
-    return [...this.state.cards.values()].filter((c) => c.noteId === noteId).sort((a, b) => a.template - b.template);
+    return selectCardsOfNote(this.state, noteId);
   }
 
   reviewsOfDeck(deckId: string): Review[] {
-    return [...this.state.reviews.values()].filter((r) => r.deckId === deckId);
+    return selectReviewsOfDeck(this.state, deckId);
   }
 
   cardFaces(cardId: string): CardFaces {
-    const card = mustGet(this.state.cards, cardId, 'card');
-    const note = mustGet(this.state.notes, card.noteId, 'note');
-    return card.template === 0 ? { question: note.front, answer: note.back } : { question: note.back, answer: note.front };
+    return selectCardFaces(this.state, cardId);
   }
 
   studyQueue(deckId: string): StudyQueue {
-    return buildStudyQueue({
-      deck: this.getDeck(deckId),
-      cards: this.state.cards.values(),
-      reviews: this.reviewsOfDeck(deckId),
-      now: this.clock(),
-      ...(this.rolloverHour !== undefined ? { rolloverHour: this.rolloverHour } : {}),
-    });
+    return selectStudyQueue(this.state, deckId, this.clock(), this.rolloverHour);
   }
 
   /** Due date (epoch ms) for each answer button. */
   previewAnswers(cardId: string): Record<Rating, number> {
-    const card = mustGet(this.state.cards, cardId, 'card');
-    return previewDue(this.getDeck(card.deckId).config, card.schedule, this.clock());
+    return selectAnswerPreview(this.state, cardId, this.clock());
   }
 
   stats(deckId?: string): DeckStats {
-    const cards = deckId ? this.cardsOfDeck(deckId) : this.state.cards.values();
-    const reviews = deckId ? this.reviewsOfDeck(deckId) : this.state.reviews.values();
-    return computeStats(cards, reviews, this.clock(), this.rolloverHour);
+    return selectStats(this.state, deckId, this.clock(), this.rolloverHour);
   }
 
   canUndo(): boolean {

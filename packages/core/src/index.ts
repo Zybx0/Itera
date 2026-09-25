@@ -37,13 +37,26 @@ export { MemoryRecordStore } from './storage/memory';
 
 export {
   Collection,
-  type CardFaces,
   type CollectionOptions,
   type CollectionState,
   type LoadReport,
   type NewDeckInput,
   type NewNoteInput,
 } from './collection';
+
+export {
+  selectAnswerPreview,
+  selectCardFaces,
+  selectCardsOfDeck,
+  selectCardsOfNote,
+  selectDeck,
+  selectDecks,
+  selectNotesOfDeck,
+  selectReviewsOfDeck,
+  selectStats,
+  selectStudyQueue,
+  type CardFaces,
+} from './selectors';
 
 export {
   decryptExport,
