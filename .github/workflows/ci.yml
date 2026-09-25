@@ -67,9 +67,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+  # Requires "Dependency graph" to be enabled in the repository settings
+  # (Settings → Code security). Once enabled, create the repository variable
+  # DEPENDENCY_REVIEW=true (Settings → Secrets and variables → Actions → Variables).
   dependency-review:
     name: Dependency review
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' && vars.DEPENDENCY_REVIEW == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

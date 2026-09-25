@@ -347,6 +347,9 @@ effacement (bouton dédié + désinstallation). Le document RGPD contient le pla
   effacement, en clair et en sombre, sous la CSP de production, 0 erreur console exigée.
 - CI (`.github/workflows/ci.yml`) : ces mêmes étapes + `npm audit` (high) + gitleaks +
   dependency review ; CodeQL hebdomadaire.
+- *Dependency review* ne tourne que si le dépôt a le **Dependency graph** activé
+  (Settings → Code security) **et** la variable Actions `DEPENDENCY_REVIEW=true`
+  (Settings → Secrets and variables → Actions → Variables).
 
 **Conventions** :
 - Écrans : **rendu pur**. Pas de `Date.now()` ni d'appel de méthode de `Collection`
