@@ -20,6 +20,7 @@ npm run web        # lancer la version web
 | Document | Contenu |
 |---|---|
 | [docs/FICHE_DE_SUIVI.md](docs/FICHE_DE_SUIVI.md) | **À lire en premier** : stack, architecture, flux, recettes, feuille de route |
+| [docs/INSTALLER_SUR_IPHONE.md](docs/INSTALLER_SUR_IPHONE.md) | Installer l'app sur son iPhone (web hors ligne, Xcode, EAS) |
 | [docs/SECURITE.md](docs/SECURITE.md) | Modèle de menaces, cryptographie, checklist de release |
 | [docs/RGPD.md](docs/RGPD.md) | Conformité, droits des personnes, plan si l'app se développe |
 | [docs/adr/](docs/adr/) | Décisions d'architecture |

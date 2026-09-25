@@ -23,7 +23,7 @@ function toInt(text: string, fallback: number): number {
 }
 
 export default function DeckSettingsScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id = '' } = useLocalSearchParams<{ id?: string }>();
   const theme = useTheme();
   const collection = useCollection();
   const deck = useCollectionState().decks.get(id);

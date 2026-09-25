@@ -20,7 +20,7 @@ import { space, type } from '@/theme/tokens';
 const MAX_LISTED = 200;
 
 export default function DeckScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id = '' } = useLocalSearchParams<{ id?: string }>();
   const theme = useTheme();
   const state = useCollectionState();
   const [now] = useNow();
@@ -54,7 +54,7 @@ export default function DeckScreen() {
       back
       title={deck.name}
       {...(deck.description ? { subtitle: deck.description } : {})}
-      right={<GlassButton icon="sliders" onPress={() => router.push({ pathname: '/deck/[id]/settings', params: { id } })} accessibilityLabel={t.deck.settings} />}>
+      right={<GlassButton icon="sliders" onPress={() => router.push({ pathname: '/deck/settings', params: { id } })} accessibilityLabel={t.deck.settings} />}>
       <Animated.View entering={FadeInDown.delay(60).duration(380)}>
         <GlassSurface style={styles.hero}>
           <CountChips counts={queue.counts} labels large />
@@ -63,7 +63,7 @@ export default function DeckScreen() {
             variant="primary"
             size="lg"
             disabled={!canStudy}
-            onPress={() => router.push({ pathname: '/study/[id]', params: { id } })}
+            onPress={() => router.push({ pathname: '/study', params: { id } })}
           />
         </GlassSurface>
       </Animated.View>

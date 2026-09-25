@@ -14,7 +14,7 @@ const headers = Object.fromEntries(
 );
 delete headers['Strict-Transport-Security'];
 headers['Content-Security-Policy'] = headers['Content-Security-Policy'].replace('; upgrade-insecure-requests', '');
-const types = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.png': 'image/png', '.ico': 'image/x-icon', '.json': 'application/json', '.ttf': 'font/ttf' };
+const types = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.png': 'image/png', '.ico': 'image/x-icon', '.json': 'application/json', '.webmanifest': 'application/manifest+json', '.ttf': 'font/ttf' };
 
 // Read the first candidate that exists (no check-then-read: avoids TOCTOU races).
 function readFirst(paths) {
@@ -32,10 +32,7 @@ createServer((req, res) => {
   const url = decodeURIComponent(new URL(req.url, 'http://x').pathname);
   const file = normalize(join(root, url));
   if (file !== root && !file.startsWith(root + '/')) return res.writeHead(403).end();
-  // Dynamic routes: /deck/<uuid> → deck/[id].html, /deck/<uuid>/settings → deck/[id]/settings.html
-  const parts = url.split('/').filter(Boolean);
-  const dynamic = [parts.map((p, i) => (i % 2 ? '[id]' : p)).join('/'), parts.map((p, i) => (i === 1 ? '[id]' : p)).join('/')];
-  const found = readFirst([file, join(file, 'index.html'), `${file}.html`, ...dynamic.map((d) => join(root, `${d}.html`)), join(root, '+not-found.html')]);
+  const found = readFirst([file, join(file, 'index.html'), `${file}.html`, join(root, '+not-found.html')]);
   if (!found) return res.writeHead(404).end();
   res.writeHead(200, { ...headers, 'Content-Type': types[extname(found.path)] ?? 'application/octet-stream' });
   res.end(found.body);
