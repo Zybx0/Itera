@@ -38,7 +38,7 @@ export default function HomeScreen() {
       const deck = await collection.createDeck({ name });
       setName('');
       setCreating(false);
-      router.push({ pathname: '/deck/[id]', params: { id: deck.id } });
+      router.push({ pathname: '/deck', params: { id: deck.id } });
     } catch (e) {
       notify(errorMessage(e));
     }
@@ -65,7 +65,7 @@ export default function HomeScreen() {
 
       {decks.map(({ deck, counts }, i) => (
         <Animated.View key={deck.id} entering={FadeInDown.delay(60 * i).duration(380)} layout={LinearTransition}>
-          <PressableScale onPress={() => router.push({ pathname: '/deck/[id]', params: { id: deck.id } })} accessibilityLabel={deck.name}>
+          <PressableScale onPress={() => router.push({ pathname: '/deck', params: { id: deck.id } })} accessibilityLabel={deck.name}>
             <GlassSurface style={styles.deck} interactive>
               <View style={styles.deckText}>
                 <Text style={[type.headline, { color: theme.text }]} numberOfLines={1}>

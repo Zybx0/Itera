@@ -11,12 +11,14 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Background } from '@/components/Background';
 import { LockGate } from '@/components/LockGate';
 import { t } from '@/i18n/fr';
+import { enableOffline } from '@/platform/offline';
 import { CollectionProvider, useCollectionStatus } from '@/state/CollectionProvider';
 import { errorMessage } from '@/state/errors';
 import { useTheme } from '@/theme/useTheme';
 import { space, type } from '@/theme/tokens';
 
 void SplashScreen.preventAutoHideAsync();
+enableOffline();
 
 function Gate() {
   const status = useCollectionStatus();

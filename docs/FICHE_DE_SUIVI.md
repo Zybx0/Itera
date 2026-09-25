@@ -8,7 +8,7 @@
 
 | | |
 |---|---|
-| Version | 0.1.0 (MVP) |
+| Version | 0.2.0 |
 | Dernière mise à jour | 2026-09-25 |
 | Plateformes | iOS (prioritaire) · Web · *(plus tard : Windows / macOS / Linux)* |
 | Documents liés | [SECURITE.md](SECURITE.md) · [RGPD.md](RGPD.md) · [adr/](adr/) · [../SECURITY.md](../SECURITY.md) |
@@ -205,22 +205,26 @@ sequenceDiagram
 │   └── test/                 Vitest : crypto, scheduler, collection, export
 └── apps/app/                 @itera/app — Expo
     ├── app.json              Config Expo : bundle id, plugins, Face ID, manifest de confidentialité
-    ├── public/_headers       En-têtes HTTP de sécurité du site web (CSP, HSTS…)
-    ├── scripts/              serve-web (sert dist/ avec la CSP), e2e-web, csp-hash
+    ├── public/               Copié tel quel dans le build web :
+    │   ├── _headers              en-têtes HTTP de sécurité (CSP, HSTS…)
+    │   ├── manifest.webmanifest  app web installable (écran d'accueil)
+    │   ├── sw.template.js        service worker (mode hors ligne) → dist/sw.js
+    │   └── icons/                icônes de l'app web
+    ├── scripts/              build-sw (génère sw.js), serve-web (sert dist/ avec la CSP), e2e-web, csp-hash
     └── src/
         ├── polyfills.ts      crypto.getRandomValues sur iOS (expo-crypto)
         ├── app/              ROUTES (Expo Router) — chaque fichier = un écran
         │   ├── _layout.tsx       Racine : providers, LockGate, écran de chargement
         │   ├── +html.tsx         Squelette HTML web (lang=fr, meta)
         │   ├── index.tsx         Accueil : liste des paquets
-        │   ├── deck/[id]/index.tsx     Paquet : compteurs, « Étudier », liste des cartes
-        │   ├── deck/[id]/settings.tsx  Réglages du paquet
+        │   ├── deck/index.tsx    Paquet (?id=) : compteurs, « Étudier », liste des cartes
+        │   ├── deck/settings.tsx Réglages du paquet (?id=)
         │   ├── note/edit.tsx     Création (?deckId=) / édition (?noteId=) d'une carte
-        │   ├── study/[id].tsx    Session d'étude
+        │   ├── study.tsx         Session d'étude (?id=)
         │   ├── settings.tsx      Sécurité, export/import, effacement
         │   └── privacy.tsx       Politique de confidentialité in-app
         ├── components/       UI : GlassSurface(.ios/.web), GlassButton, Background, Screen…
-        ├── platform/         Adaptateurs OS : keyStore, recordStore, files, appLock, dialog, haptics
+        ├── platform/         Adaptateurs OS : keyStore, recordStore, files, appLock, dialog, haptics, offline
         ├── state/            CollectionProvider, useNow, errors (messages utilisateur)
         ├── theme/            Jetons de design (couleurs clair/sombre, rayons, typo)
         └── i18n/fr.ts        Tous les textes affichés
@@ -343,7 +347,8 @@ effacement (bouton dédié + désinstallation). Le document RGPD contient le pla
 - `npm run check` = typecheck (core + app) + lint (ESLint Expo + règles de sécurité) +
   tests. Couverture du cœur > 95 % (seuils imposés dans `vitest.config.ts`).
 - E2E web (`apps/app/scripts/e2e-web.mjs`) : création → ajout → étude clavier → rechargement
-  (persistance) → vérifie qu'IndexedDB ne contient **aucun texte en clair** → export →
+  (persistance) → **réseau coupé** : l'app se charge et on ajoute une carte → vérifie
+  qu'IndexedDB ne contient **aucun texte en clair** → export →
   effacement, en clair et en sombre, sous la CSP de production, 0 erreur console exigée.
 - CI (`.github/workflows/ci.yml`) : ces mêmes étapes + `npm audit` (high) + gitleaks +
   dependency review ; CodeQL hebdomadaire.
@@ -366,6 +371,10 @@ effacement (bouton dédié + désinstallation). Le document RGPD contient le pla
 
 **Ajouter un écran** : créer `apps/app/src/app/<route>.tsx` exportant un composant par
 défaut qui utilise `<Screen>` ; naviguer avec `router.push('/<route>')`.
+**Pas de segments dynamiques** (`[id].tsx`) : passer les identifiants en paramètre de
+requête (`router.push({ pathname: '/deck', params: { id } })` → `/deck?id=…`). Ainsi chaque
+écran est un fichier HTML statique : hébergement sans règles de réécriture et mise en
+cache hors ligne simple.
 
 **Ajouter un champ au modèle** (ex. `Note.source`) :
 1. `model/schemas.ts` : ajouter le champ **avec une valeur par défaut**
@@ -388,10 +397,18 @@ voir ADR-0001) et implémenter `keyStore` via le trousseau de l'OS (plugin
 `npx eas-cli submit`. Fiche App Store : « Données non collectées » (voir RGPD.md §6).
 Vérifier la checklist de SECURITE.md §8.
 
-**Déployer le web** : `npm run build:web` → publier `apps/app/dist` sur un hébergeur
-statique (Netlify / Cloudflare Pages lisent `_headers` ; sinon reporter les en-têtes dans
-la config de l'hébergeur). Hébergeur situé dans l'UE de préférence, sans logs d'accès ou
-avec rétention courte (RGPD.md §5).
+**Déployer le web** : `npm run build:web` (export Expo **puis** génération de `sw.js`) →
+publier `apps/app/dist` sur un hébergeur statique en HTTPS (Netlify / Cloudflare Pages
+lisent `_headers` ; sinon reporter les en-têtes dans la config de l'hébergeur).
+Pas-à-pas : [INSTALLER_SUR_IPHONE.md](INSTALLER_SUR_IPHONE.md). Hébergeur situé dans l'UE
+de préférence, sans logs d'accès ou avec rétention courte (RGPD.md §5).
+
+**Mode hors ligne (web)** : `platform/offline.web.ts` enregistre `/sw.js` (build de
+production uniquement) et demande un stockage persistant. `scripts/build-sw.mjs` liste
+tous les fichiers de `dist/` et calcule une version (hash du contenu) : à chaque nouveau
+build, le navigateur installe le nouveau worker, télécharge les nouveaux fichiers et
+supprime l'ancien cache. Stratégie : tout est pré-caché, puis servi « cache d'abord ».
+Le worker ne met jamais en cache les données utilisateur (elles sont dans IndexedDB).
 
 ## 14. Limites connues et feuille de route
 
@@ -420,4 +437,5 @@ avec rétention courte (RGPD.md §5).
 
 | Date | Version | Changement |
 |---|---|---|
+| 2026-09-25 | 0.2.0 | Web installable et **hors ligne** (manifest, service worker pré-caché, icônes) ; routes sans segments dynamiques (`/deck?id=`, `/study?id=`) ; test e2e hors ligne ; guide d'installation iPhone. |
 | 2026-09-25 | 0.1.0 | Création du monorepo : `@itera/core` (modèle, FSRS, chiffrement, export), app Expo iOS/web (UI glass, stockage chiffré, verrouillage, export/import, effacement), CI sécurité, documentation. |

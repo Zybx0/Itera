@@ -68,6 +68,10 @@ Définis dans `apps/app/public/_headers` et vérifiés par l'e2e :
   l'exécution) ; risque faible car les scripts, eux, sont verrouillés.
 - Le hash du script inline d'Expo Router est recalculé par `npm run csp:hash` ; la CI
   échoue s'il ne correspond plus.
+- Service worker (mode hors ligne) : même origine uniquement (`worker-src 'self'`), ne
+  répond qu'aux requêtes GET de l'origine, ne met en cache que les fichiers de l'app
+  (jamais les données utilisateur, qui restent chiffrées dans IndexedDB). `/sw.js` est
+  servi avec `Cache-Control: no-cache` pour que les correctifs de sécurité arrivent vite.
 
 ## 6. Sécurité du code
 

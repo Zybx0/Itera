@@ -34,7 +34,7 @@ const RATINGS: { rating: Rating; label: string; key: 'again' | 'hard' | 'good' |
 ];
 
 export default function StudyScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id = '' } = useLocalSearchParams<{ id?: string }>();
   const theme = useTheme();
   const collection = useCollection();
   const state = useCollectionState();
