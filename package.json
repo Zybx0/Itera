@@ -1,0 +1,23 @@
+{
+  "name": "itera",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Itera — application de répétition espacée (clone d'Anki), local-first, chiffrée, conforme RGPD.",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "npm run test --workspace @itera/core",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "check": "npm run typecheck && npm run lint && npm test",
+    "audit:prod": "npm audit --omit=dev --audit-level=high",
+    "web": "npm run web --workspace @itera/app",
+    "ios": "npm run ios --workspace @itera/app",
+    "build:web": "npm run build:web --workspace @itera/app"
+  }
+}
