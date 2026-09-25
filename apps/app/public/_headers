@@ -1,0 +1,15 @@
+# HTTP security headers for the static web build (Netlify / Cloudflare Pages
+# syntax; translate for other hosts). Keep in sync with docs/SECURITE.md.
+# The sha256 in script-src is the hash of Expo Router's inline hydration
+# script ("globalThis.__EXPO_ROUTER_HYDRATE__=true;"). If an Expo upgrade
+# changes it, the web app will not start: recompute it with
+#   node apps/app/scripts/csp-hash.mjs
+/*
+  Content-Security-Policy: default-src 'none'; script-src 'self' 'sha256-67fhrP0+BkBqmgGGXTtgiVO/9EQs3QruYNU/7fnRkI8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; object-src 'none'; upgrade-insecure-requests
+  Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: no-referrer
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Resource-Policy: same-origin
