@@ -1,67 +1,72 @@
 /**
- * Full-screen animated backdrop: a soft gradient with three slowly drifting
- * colour orbs. The glass surfaces above blur/refract it, which is what makes
- * the UI feel "liquid". Animations run on the UI thread (Reanimated) and
- * are disabled when the user asks the OS to reduce motion.
+ * Full-screen backdrop: a plain near-flat gradient with, in dark mode, two
+ * very soft, diffuse light sources anchored in opposite corners (à la
+ * glassresearch.tech) — no visible circular edge, no motion. Approximated
+ * with stacked, increasingly-opaque concentric circles (works identically
+ * on native and web) and, on web only, an extra CSS blur on top to erase any
+ * remaining banding. The glass surfaces above blur/refract this field, which
+ * is what reads as "glass": the effect comes from the panels, not the décor.
  */
 import { LinearGradient } from 'expo-linear-gradient';
-import { useEffect } from 'react';
-import { Platform, StyleSheet, useWindowDimensions, View, type ViewStyle } from 'react-native';
-import Animated, { Easing, useAnimatedStyle, useReducedMotion, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated';
+import { useState } from 'react';
+import { Platform, StyleSheet, View, type LayoutChangeEvent, type ViewStyle } from 'react-native';
 
 import { useTheme } from '@/theme/useTheme';
 
-function Orb({
-  color,
-  size,
-  from,
-  to,
-  duration,
-  opacity = 0.32,
-}: {
-  color: string;
-  size: number;
-  from: [number, number];
-  to: [number, number];
-  duration: number;
-  opacity?: number;
-}) {
-  const progress = useSharedValue(0);
-  const reduceMotion = useReducedMotion();
+const RINGS = [
+  { scale: 1, opacity: 0.05 },
+  { scale: 0.68, opacity: 0.07 },
+  { scale: 0.4, opacity: 0.09 },
+] as const;
 
-  useEffect(() => {
-    if (!reduceMotion) progress.set(withRepeat(withTiming(1, { duration, easing: Easing.inOut(Easing.sin) }), -1, true));
-  }, [progress, duration, reduceMotion]);
-
-  const animated = useAnimatedStyle(() => ({
-    transform: [
-      { translateX: from[0] + (to[0] - from[0]) * progress.get() },
-      { translateY: from[1] + (to[1] - from[1]) * progress.get() },
-      { scale: 1 + 0.15 * progress.get() },
-    ],
-  }));
-
-  const blur = Platform.OS === 'web' ? ({ filter: 'blur(70px)' } as ViewStyle) : null;
+/** A soft radial glow, faked with concentric circles, centred on (cx, cy). */
+function Glow({ color, cx, cy, size }: { color: string; cx: number; cy: number; size: number }) {
+  const blur = Platform.OS === 'web' ? ({ filter: 'blur(80px)' } as ViewStyle) : null;
   return (
-    <Animated.View
-      pointerEvents="none"
-      style={[{ position: 'absolute', width: size, height: size, borderRadius: size / 2, backgroundColor: color, opacity }, blur, animated]}
-    />
+    <View style={[StyleSheet.absoluteFill, blur]} pointerEvents="none">
+      {RINGS.map((ring) => {
+        const ringSize = size * ring.scale;
+        return (
+          <View
+            key={ring.scale}
+            style={{
+              position: 'absolute',
+              left: cx - ringSize / 2,
+              top: cy - ringSize / 2,
+              width: ringSize,
+              height: ringSize,
+              borderRadius: ringSize / 2,
+              backgroundColor: color,
+              opacity: ring.opacity,
+            }}
+          />
+        );
+      })}
+    </View>
   );
 }
 
 export function Background() {
   const theme = useTheme();
-  const { width, height } = useWindowDimensions();
-  const size = Math.max(width, height) * 0.55;
-  // Sober look: mostly black/near-white, the violet glow is a hint, not a rainbow.
-  const opacity = theme.dark ? 0.22 : 0.38;
+  // Measured after mount (onLayout), not useWindowDimensions: Expo Router's
+  // static web export pre-renders with no real window, so sizing the glow
+  // from the window size mismatches between server and client hydration.
+  // Starting from null on both sides and filling in post-mount avoids that.
+  const [layout, setLayout] = useState<{ width: number; height: number } | null>(null);
+  const onLayout = (e: LayoutChangeEvent) => {
+    const { width, height } = e.nativeEvent.layout;
+    setLayout({ width, height });
+  };
+  const size = layout ? Math.max(layout.width, layout.height) * 1.1 : 0;
   return (
-    <View style={[StyleSheet.absoluteFill, { overflow: 'hidden' }]} pointerEvents="none">
-      <LinearGradient colors={theme.backgroundGradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
-      <Orb color={theme.orbs[0]} size={size} from={[-size * 0.3, -size * 0.2]} to={[width * 0.3, height * 0.1]} duration={17_000} opacity={opacity} />
-      <Orb color={theme.orbs[1]} size={size * 0.8} from={[width * 0.6, height * 0.35]} to={[width * 0.1, height * 0.55]} duration={21_000} opacity={opacity} />
-      <Orb color={theme.orbs[2]} size={size * 0.9} from={[width * 0.1, height * 0.8]} to={[width * 0.55, height * 0.6]} duration={25_000} opacity={opacity} />
+    <View style={[StyleSheet.absoluteFill, { overflow: 'hidden' }]} pointerEvents="none" onLayout={onLayout}>
+      <LinearGradient colors={theme.backgroundGradient} start={{ x: 0.5, y: 0 }} end={{ x: 0.5, y: 1 }} style={StyleSheet.absoluteFill} />
+      {theme.glow && layout ? (
+        <>
+          <Glow color={theme.glow[0]} cx={0} cy={0} size={size} />
+          <Glow color={theme.glow[1]} cx={layout.width} cy={layout.height} size={size} />
+        </>
+      ) : null}
     </View>
   );
 }
