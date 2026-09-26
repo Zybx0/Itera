@@ -9,6 +9,7 @@ import { StyleSheet, View } from 'react-native';
 import { useTheme } from '@/theme/useTheme';
 import { radius as radii } from '@/theme/tokens';
 
+import { GlassSheen } from './GlassSheen';
 import type { GlassSurfaceProps } from './GlassSurface.types';
 
 const LIQUID = isLiquidGlassAvailable();
@@ -16,6 +17,7 @@ const LIQUID = isLiquidGlassAvailable();
 export function GlassSurface({ children, style, radius = radii.lg, variant = 'regular', tint, interactive }: GlassSurfaceProps) {
   const theme = useTheme();
   if (LIQUID) {
+    // Real system Liquid Glass already renders its own specular highlight — no GlassSheen here.
     return (
       <GlassView
         glassEffectStyle={variant}
@@ -32,6 +34,7 @@ export function GlassSurface({ children, style, radius = radii.lg, variant = 're
       tint={theme.dark ? 'systemThinMaterialDark' : 'systemThinMaterialLight'}
       style={[{ borderRadius: radius, overflow: 'hidden', borderWidth: StyleSheet.hairlineWidth, borderColor: theme.glassBorder }, style]}>
       {tint ? <View style={[StyleSheet.absoluteFill, { backgroundColor: tint, opacity: 0.85 }]} /> : null}
+      <GlassSheen />
       {children}
     </BlurView>
   );
