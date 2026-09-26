@@ -4,6 +4,7 @@ import { StyleSheet, View } from 'react-native';
 import { useTheme } from '@/theme/useTheme';
 import { radius as radii } from '@/theme/tokens';
 
+import { GlassSheen } from './GlassSheen';
 import type { GlassSurfaceProps } from './GlassSurface.types';
 
 export function GlassSurface({ children, style, radius = radii.lg, variant = 'regular', tint }: GlassSurfaceProps) {
@@ -17,9 +18,11 @@ export function GlassSurface({ children, style, radius = radii.lg, variant = 're
           borderWidth: StyleSheet.hairlineWidth,
           borderColor: theme.glassBorder,
           overflow: 'hidden',
+          elevation: 4,
         },
         style,
       ]}>
+      <GlassSheen />
       {children}
     </View>
   );

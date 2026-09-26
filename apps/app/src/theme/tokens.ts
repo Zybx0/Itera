@@ -16,14 +16,8 @@ export interface Theme {
   glassBorder: string;
   glassHighlight: string;
   shadow: string;
-  /** Plain, static two-stop gradient. */
+  /** Plain, static two-stop gradient — no decorative shapes. */
   backgroundGradient: [string, string];
-  /**
-   * Two very soft, diffuse light sources anchored in opposite corners
-   * (top-left, bottom-right) — no visible edge, not a floating shape.
-   * Undefined = no glow (used for the light theme, kept flat).
-   */
-  glow?: [string, string];
   rating: { again: string; hard: string; good: string; easy: string };
   state: { new: string; learning: string; review: string };
 }
@@ -58,13 +52,12 @@ export const darkTheme: Theme = {
   accent: '#7A5FD1',
   accentText: '#F5F3FF',
   danger: '#D9666C',
-  glassFill: 'rgba(180,165,210,0.06)',
-  glassFillStrong: 'rgba(180,165,210,0.12)',
-  glassBorder: 'rgba(210,200,230,0.12)',
-  glassHighlight: 'rgba(220,210,240,0.2)',
-  shadow: 'rgba(0,0,0,0.55)',
-  backgroundGradient: ['#0A0A0F', '#050408'],
-  glow: ['#2C8FA8', '#8A3E86'],
+  glassFill: 'rgba(180,165,210,0.07)',
+  glassFillStrong: 'rgba(180,165,210,0.13)',
+  glassBorder: 'rgba(215,205,235,0.18)',
+  glassHighlight: 'rgba(225,215,245,0.16)',
+  shadow: 'rgba(0,0,0,0.6)',
+  backgroundGradient: ['#0A0A0F', '#040407'],
   rating: { again: '#D9666C', hard: '#C98A54', good: '#4EA37C', easy: '#6D89CE' },
   state: { new: '#6D89CE', learning: '#D9666C', review: '#4EA37C' },
 };
