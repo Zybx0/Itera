@@ -11,9 +11,11 @@
       "bundleIdentifier": "app.itera.ios",
       "icon": "./assets/expo.icon",
       "supportsTablet": true,
-      "config": { "usesNonExemptEncryption": false },
+      "config": {
+        "usesNonExemptEncryption": false
+      },
       "infoPlist": {
-        "NSFaceIDUsageDescription": "Itera utilise Face ID pour protéger l'accès à vos cartes.",
+        "NSFaceIDUsageDescription": "Itera utilise Face ID pour prot\u00e9ger l'acc\u00e8s \u00e0 vos cartes.",
         "ITSAppUsesNonExemptEncryption": false
       },
       "privacyManifests": {
@@ -42,15 +44,23 @@
       "backgroundColor": "#E9E7FF"
     },
     "plugins": [
+      "./plugins/withIosSceneLifecycle",
       "expo-router",
       "expo-secure-store",
       "expo-sqlite",
-      ["expo-local-authentication", { "faceIDPermission": "Itera utilise Face ID pour protéger l'accès à vos cartes." }],
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Itera utilise Face ID pour prot\u00e9ger l'acc\u00e8s \u00e0 vos cartes."
+        }
+      ],
       [
         "expo-splash-screen",
         {
           "backgroundColor": "#E9E7FF",
-          "dark": { "backgroundColor": "#07071A" },
+          "dark": {
+            "backgroundColor": "#07071A"
+          },
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
         }

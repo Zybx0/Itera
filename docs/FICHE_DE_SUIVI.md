@@ -389,6 +389,21 @@ voir ADR-0001) et implémenter `keyStore` via le trousseau de l'OS (plugin
 `tauri-plugin-stronghold` ou keyring) ; ou React Native Windows/macOS avec leurs propres
 `xxx.windows.ts`/`xxx.macos.ts`.
 
+**Correctif iOS temporaire — cycle de vie par scène (`plugins/withIosSceneLifecycle.js`)** :
+Expo SDK 57 génère un `AppDelegate.swift` qui crée sa fenêtre à l'ancienne (avant les
+« scènes » iOS). Les iPhone récents refusent ce mode et tuent l'app au lancement
+(« UIScene life cycle is required… », visible dans la Console macOS, jamais dans les
+logs Metro puisque le crash survient avant que JS ne démarre). Un plugin de config Expo
+(`apps/app/plugins/withIosSceneLifecycle.js`, enregistré dans `app.json`) corrige ça à
+chaque régénération de `ios/` : il ajoute `UIApplicationSceneManifest` à `Info.plist` et
+retire l'ancien appel dans `AppDelegate.swift`, en s'appuyant sur `ExpoAppSceneDelegate`
+qu'Expo fournit déjà mais ne branche pas encore par défaut. **À supprimer** dès qu'une
+future version d'Expo fait ça nativement (essayer sans le plugin, avec
+`npx expo prebuild -p ios --clean`, puis retirer le plugin si l'app se lance toujours).
+Comme `ios/` est régénéré à chaque fois (non versionné), toujours utiliser
+`npx expo prebuild -p ios --clean` après avoir touché ce plugin ou fait évoluer Expo,
+plutôt que de modifier `ios/` à la main.
+
 **Mettre à jour Expo** : `cd apps/app && npx expo install expo@^<N> --fix`, puis
 `npx expo-doctor`, `npm run check`, `npm run build:web`, recalculer le hash CSP
 (`npm run csp:hash`) et mettre à jour `public/_headers` si besoin, e2e, test sur iPhone.

@@ -67,8 +67,15 @@ habituel, l'iPhone et son câble.
    git clone https://github.com/Zybx0/Itera.git && cd Itera
    npm install
    cd apps/app
+   npx expo prebuild -p ios --clean
    npx expo run:ios --device --configuration Release
    ```
+   `prebuild --clean` régénère entièrement le dossier `ios/` (il n'est jamais gardé dans
+   le dépôt) en appliquant nos correctifs de configuration, notamment celui qui évite un
+   plantage immédiat au lancement sur les iPhone récents (voir
+   `apps/app/plugins/withIosSceneLifecycle.js`). Si `ios/` existe déjà d'un essai
+   précédent et que l'app se ferme aussitôt ouverte, c'est probablement qu'il date d'avant
+   ce correctif : relancez `npx expo prebuild -p ios --clean` pour le régénérer.
    Choisir votre iPhone dans la liste. La première fois, Xcode demande une équipe de
    signature : ouvrir `apps/app/ios/Itera.xcworkspace` dans Xcode → cible *Itera* →
    *Signing & Capabilities* → *Team* : votre identifiant Apple (*Personal Team*). Si le
